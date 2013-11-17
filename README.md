@@ -35,8 +35,8 @@ Wiring
 
     nRF24L01+             BeagleBoneBlack
 	+-+-+                    (header)
-	|8|7|	1: GND      ->   P9 GND
-	+-+-+	2: 3.3V     ->   P9 3.3v
+	|8|7|	1: GND      ->   P8 GND
+	+-+-+	2: 3.3V     ->   P8 3.3v
 	|6|5|	3: CE       ->   P9_15 (configurable)
 	+-+-+	4: CSN      ->   SPI0.CS
 	|4|3|	5: SCKL     ->   SPI0.SCK

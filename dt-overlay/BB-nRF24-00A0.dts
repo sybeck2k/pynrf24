@@ -1,0 +1,97 @@
+/*
+ * Original work Copyright (C) 2013 CircuitCo
+ *
+ * Virtual cape for RF24 radio module, uses
+ * GPIO on connector pins P9.15 and P9.16
+ * SPI0 on connector pins P9.22 P9.21 P9.18 P9.17
+ *
+ * Modified to enable /dev/spidev1.0 by Carl Johnson
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+/plugin/;
+
+/ {
+        compatible = "ti,beaglebone", "ti,beaglebone-black";
+
+        /* identification */
+        part-number = "BB-nRF24";
+        version = "00A0";
+
+        /* state the resources this cape uses */
+        exclusive-use =
+                /* the pin header uses */
+                "P9.15",        /* RF24 CE */
+                "P9.16",        /* RF24 IRQ */
+                "P9.17",        /* spi0_cs0 */
+                "P9.18",        /* spi0_d1 */
+                "P9.21",        /* spi0_d0 */
+                "P9.22",        /* spi0_sclk */
+                /* the hardware ip uses */
+                "spi0";
+
+        fragment@0 {
+                target = <&am33xx_pinmux>;
+                __overlay__ {
+                        /* default state has all gpios released and mode set to uart1 */
+                        bb_spi0_pins: pinmux_bb_spi0_pins {
+                                pinctrl-single,pins = <
+                                        0x150 0x30      /* spi0_sclk.spi0_sclk, INPUT_PULLUP | MODE0 */
+                                        0x154 0x30      /* spi0_d0.spi0_d0, INPUT_PULLUP | MODE0 */
+                                        0x158 0x10      /* spi0_d1.spi0_d1, OUTPUT_PULLUP | MODE0 */
+                                        0x15c 0x10      /* spi0_cs0.spi0_cs0, OUTPUT_PULLUP | MODE0 */
+                                >;
+                        };
+                };
+        };
+
+        fragment@1 {
+            target = <&am33xx_pinmux>;
+            __overlay__ {
+                pinctrl_rf24_gpio: pinctrl_rf24_0_pins {
+                    pinctrl-single,pins = <
+                        0x040 0x07 /* P9_15 OUTPUT | MODE7 */
+                        0x04c 0x07 /* P9_16 OUTPUT | MODE7 */
+                        /* Add more pins here */
+                    >;
+                };
+            };
+        };
+
+        fragment@2 {
+                target = <&spi0>;       /* spi0 is numbered correctly */
+                __overlay__ {
+                        status = "okay";
+                        pinctrl-names = "default";
+                        pinctrl-0 = <&bb_spi0_pins>;
+
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+
+                        spidev: spidev@0{
+                                #address-cells = <1>;
+                                #size-cells = <0>;
+
+                                compatible = "linux,spidev";
+                                reg = <0>;
+                                spi-max-frequency = <500000>;
+                        };
+
+                };
+        };
+
+        fragment@3 {
+            target = <&ocp>;
+            __overlay__ {
+                test_helper: helper {
+                    compatible = "bone-pinmux-helper";
+                    pinctrl-names = "default";
+                    pinctrl-0 = <&pinctrl_rf24_gpio>;
+                    status = "okay";
+                };
+            };
+        };
+};
